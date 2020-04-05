@@ -9,6 +9,7 @@ lazy val root = (project in file(".")).
 libraryDependencies ++= Seq(
   "org.apache.spark" %% "spark-core" % "2.3.2" % "provided",
   "org.apache.spark" %% "spark-sql" % "2.3.2" % "provided",
+  "org.apache.spark" %% "spark-graphx" % "2.3.2" % "provided",
   "commons-io" % "commons-io" % "2.6",
   "io.sensesecure" % "hadoop-xz" % "1.4",
   "com.amazonaws" % "aws-java-sdk" % "1.11.427" exclude("com.fasterxml.jackson.core", "jackson-databind")

@@ -1,20 +1,17 @@
-package com.blockchain.app
+package com.blockchain.test
 
-import com.blockchain.helper.ReadPropFromS3
+import org.apache.spark.sql.functions.{col, lit}
 import org.apache.spark.sql.{Encoders, SparkSession}
-import org.graphframes._
-import org.apache.spark.SparkConf
-import org.apache.spark.SparkContext
-import org.apache.spark.sql.functions._
+import org.apache.spark.{SparkConf, SparkContext}
+import org.graphframes.GraphFrame
 
-object BlockChain3 {
-
+object BlockChainLocal {
   case class EdgeSchema(src: Int, dst: Int, txID: Int)
   case class AddressSchema(id: Int)
 
   def main(args: Array[String]): Unit = {
 
-    val conf = new SparkConf().setAppName("BlockChain3")
+    val conf = new SparkConf().setAppName("BlockChain3").setMaster("local[*]")
     val sparkContext = new SparkContext(conf).setCheckpointDir("/tmp")
 
     val spark = SparkSession
@@ -28,16 +25,18 @@ object BlockChain3 {
       .option("header", "false")
       .option("delimiter", "\t")
       .schema(edgeSchema)
-      .load(ReadPropFromS3.getProperties("edge"))
+      .load("E:/hw2/local/add_edges_s.txt")
 
     val addSchema = Encoders.product[AddressSchema].schema
     val addDf = spark.read.format("csv")
       .option("header", "false")
       .option("delimiter", "\t")
       .schema(addSchema)
-      .load(ReadPropFromS3.getProperties("add"))
+      .load("E:/hw2/local/addresses.txt")
 
     val edgeFinalDf = edgeDf.filter(!(col("src")===lit(-1)))
+
+    edgeFinalDf.show()
 
     val graph = GraphFrame(addDf, edgeFinalDf)
 
@@ -47,7 +46,8 @@ object BlockChain3 {
       .format("csv")
       .option("header","false")
       .option("delimiter", "\t")
-      .save("s3://"+ReadPropFromS3.getProperties("bucketName")+"/data/addr_jcsc.txt")
+      .save("E:/hw2/local/addr_jcsc.txt")
+
   }
 
 }

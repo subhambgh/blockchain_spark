@@ -5,7 +5,7 @@ import java.io.{BufferedWriter, File, FileOutputStream, OutputStreamWriter}
 import com.amazonaws.regions.Regions
 import com.amazonaws.services.s3.{AmazonS3, AmazonS3ClientBuilder}
 
-object Writer {
+object WriteToS3 {
   val s3Client: AmazonS3 = AmazonS3ClientBuilder.standard.withRegion(Regions.US_EAST_1).build
   var file:File = new File("op.txt")
   val writer:BufferedWriter = new BufferedWriter(new OutputStreamWriter(
@@ -19,6 +19,6 @@ object Writer {
 
   def close(): Unit ={
     writer.close()
-    s3Client.putObject("blockchain-emr-bucket", ReadProperties.getProperties("writeTo"), file)
+    s3Client.putObject(ReadPropFromS3.getProperties("bucketName"), ReadPropFromS3.getProperties("writeTo"), file)
   }
 }

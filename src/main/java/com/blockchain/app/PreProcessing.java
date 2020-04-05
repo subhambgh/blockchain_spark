@@ -1,6 +1,5 @@
 package com.blockchain.app;
 
-import com.google.code.externalsorting.BinaryFileBuffer;
 import com.google.code.externalsorting.ExternalSort;
 import com.google.code.externalsorting.IOStringStack;
 
@@ -9,17 +8,22 @@ import java.math.BigInteger;
 import java.nio.charset.Charset;
 import java.util.*;
 
+/**
+ * This class is used to pre-process the data for HW2. Part2.
+ */
 public class PreProcessing {
     public static void main(String[] args) throws Exception {
         Comparator<String> cmp = (op1, op2) ->
                 new BigInteger(op1.split("\t")[0]).compareTo(new BigInteger(op2.split("\t")[0]));
+        removeDuplicatesfromFile(new File(ReadPropFromLocal.getProperties("txout"))
+                ,new File("D:/singleOpTxn.txt"));
         List<File> files = new ArrayList<>();
-        String dir = "E:/hw2/local/";
-        files.add(new File(dir+"txin.txt"));
-        files.add(new File(dir+"txout.txt"));
-        mergeSortedFiles(files, new File(dir+"mergeTxnIpOp.txt"),cmp,false);
-//        getEdgeList(new File("D:/mergeTxnIpOp.txt"),new File(dir+"addr_edges.dat"));
+        files.add(new File(ReadPropFromLocal.getProperties("txin")));
+        files.add(new File("D:/singleOpTxn.txt"));
+        mergeSortedFiles(files, new File("D:/mergeTxnIpSingleOp.txt"),cmp,false);
+        getEdgeList(new File("D:/mergeTxnIpSingleOp.txt"),new File("D:/addr_edges.txt"));
         //sort /unique  < E:/hw2/addr_edges.dat > E:/hw2/addr_edges_s.dat
+
     }
     /**
      * Process file and generate the edge list
@@ -60,6 +64,7 @@ public class PreProcessing {
             else
                 bw.write(writeLine1 + writeLine2);
         }
+        bw.close();
     }
     /**
      * This merges txin and txout - writes output file in the format
@@ -84,6 +89,31 @@ public class PreProcessing {
 //            f.delete();
         return rowcounter;
     }
-
+    /**
+     * This finds the single o/p transactions
+     *
+     */
+    public static void removeDuplicatesfromFile(File inputFile, File outputFile) throws IOException {
+        int count=0;
+        final BufferedReader br = new BufferedReader(
+                new InputStreamReader(new FileInputStream(inputFile)));
+        FileOutputStream fos = new FileOutputStream(outputFile);
+        final BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(fos));
+        String line,prevLine = br.readLine();
+        while ((line = br.readLine()) != null){
+            if(line.split("\t")[0].equals(prevLine.split("\t")[0]))
+                count++;
+            else{
+                if(count==1){
+                    bw.write(prevLine);
+                    bw.newLine();
+                }
+                count=1;
+                prevLine = line;
+            }
+        }
+        br.close();
+        bw.close();
+    }
 }
 
