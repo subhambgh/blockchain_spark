@@ -10,20 +10,49 @@ import java.util.*;
 
 /**
  * This class is used to pre-process the data for HW2. Part2.
+ * *  preprocessing steps
+ *      *    1. get all the single o/p transactions from txout.dat
+ *      *      - simple - all records are sorted
+ *      *      - two pointer problem
+ *      *    2. merge all this single o/p transactions with all the i/p transactions
+ *      *      - external merge sort - used com.google.externalsort (again an interesting lib - implementation of external merge sort in ADS)
+ *      *        - create two Queues for each file - to read chars in bytes (BufferedReader),
+ *      *        and store both of them in a Priority Queue, PQ
+ *      *        - create another queue (BufferedWriter) to write to a new file
+ *      *        - PQ here compares data based on the new Integer(split("\t")[0])
+ *      *        - pull smallest record from PQ and write to writer queue
+ *      *        - as soon as you pull a record in a queue from PQ, buffer another set of chars into the corresponding queue
+ *      *        - Also, go on writing the files into the file from another queue
+ *      *    3. Process file and generate the edge list
+ *      *        * Example :
+ *      *        *   in:
+ *      *        *      txID1 + \t + addID1
+ *      *        *      txID1 + \t + addID2
+ *      *        *   out:
+ *      *        *      addID1 + \t + addID2 + \t + txID1
  */
 public class PreProcessing {
     public static void main(String[] args) throws Exception {
-//        Comparator<String> cmp = (op1, op2) ->
-//                new Integer(op1.split("\t")[0]).compareTo(new Integer(op2.split("\t")[0]));
-//        removeDuplicatesfromFile(new File(ReadPropFromLocal.getProperties("txout"))
-//                ,new File("D:/singleOpTxn.txt"));
-//        List<File> files = new ArrayList<>();
-//        files.add(new File(ReadPropFromLocal.getProperties("txin")));
-//        files.add(new File("D:/singleOpTxn.txt"));
-//        mergeSortedFiles(files, new File("D:/mergeTxnIpSingleOp.txt"),cmp,false);
+        /**Step 1 */
+        removeDuplicatesfromFile(new File(ReadPropFromLocal.getProperties("txout"))
+                ,new File("D:/singleOpTxn.txt"));
+        /**Step 2 */
+        List<File> files = new ArrayList<>();
+        files.add(new File(ReadPropFromLocal.getProperties("txin")));
+        files.add(new File("D:/singleOpTxn.txt"));
+        Comparator<String> cmp = (op1, op2) ->
+                new Integer(op1.split("\t")[0]).compareTo(new Integer(op2.split("\t")[0]));
+        mergeSortedFiles(files, new File("D:/mergeTxnIpSingleOp.txt"),cmp,false);
+        /**Step 3 */
         getEdgeList(new File("D:/mergeTxnIpSingleOp.txt"),new File("D:/addr_edges.txt"));
-        //sort /unique  < E:/hw2/addr_edges.dat > E:/hw2/addr_edges_s.dat
-
+        /**Step 4 */
+        /**
+         * was unable to run this WINDOWS script through java, in the given time :(
+         * but used it to sort and get unique records in the final preprocessed file
+         * warning, takes a lot of time {*_*}
+         * ->         sort /unique  < E:/hw2/addr_edges.dat > E:/hw2/addr_edges_s.dat
+         *
+         * */
     }
     /**
      * Process file and generate the edge list

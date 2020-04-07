@@ -4,7 +4,7 @@ import com.blockchain.helper.{ReadFromHDFS, ReadPropFromS3, WriteToS3}
 import org.apache.spark.sql.functions.{col, max}
 import org.apache.spark.sql.{Encoders, SparkSession}
 
-object BlockChain2 {
+object Part1_2 {
 
   case class TxnSchema(txID: Int, blockID: Int, n_inputs: Int, n_outputs: Int)
   case class TxnHashSchema(txID: Int, hash: String)
@@ -18,10 +18,10 @@ object BlockChain2 {
 
     val spark = SparkSession
       .builder()
-      .appName("BlockChain2")
+      .appName("Part1_2")
       .getOrCreate()
 
-    var txnSchema = Encoders.product[TxnSchema].schema
+    val txnSchema = Encoders.product[TxnSchema].schema
     var txnDf = spark.read.format("csv").
       option("header", "false").
       option("delimiter", "\t").
@@ -29,33 +29,38 @@ object BlockChain2 {
       load(ReadPropFromS3.getProperties("tx")).
       cache()
 
-    var txnHashSchema = Encoders.product[TxnHashSchema].schema
-    var txnHashDf = spark.read.format("csv").
+    val txnHashSchema = Encoders.product[TxnHashSchema].schema
+    val txnHashDf = spark.read.format("csv").
       option("header", "false").
       option("delimiter", "\t").
       schema(txnHashSchema).
       load(ReadPropFromS3.getProperties("txh"))
 
-    var numTransWithZeroIp = txnDf.select(col("txID")).where(col("n_inputs") === 0).count()
+    /**
+     * coinbase transactions are trans with 0 inputs
+     * To calculate that we have a col(n_inputs) in the tx.dat data
+     * we can utilize that to calculate the number of coinbase trans
+     *
+     * */
+    val numTransWithZeroIp = txnDf.select(col("txID")).where(col("n_inputs") === 0).count()
 
-    txnDf = txnDf.select(txnDf.col("*")).where(col("n_inputs")=== txnDf.select(max("n_inputs")).first().get(0))
-
-    var finalTxDf = txnDf.as("txnDf").join(txnHashDf.as("txnHashDf"), txnDf("txID") === txnHashDf("txID"), "inner").
+    /**
+     * again using col(n_inputs) we can calculate trans with max inputs
+     * and also join with txh.dat to get the transaction hashes
+     *
+     * */
+    txnDf = txnDf.select(txnDf.col("*"))
+      .where(col("n_inputs")=== txnDf.select(max("n_inputs")).first().get(0))
+    var finalTxDf = txnDf.as("txnDf")
+      .join(txnHashDf.as("txnHashDf"), txnDf("txID") === txnHashDf("txID"), "inner").
       select(col("txnDf.*"), col("txnHashDf.hash"))
     var maxIp = finalTxDf.collectAsList().toString
 
-    /*
-        5. What is the transaction that has the greatest number of inputs? How
-        many inputs exactly? Show the hash of that transaction. If there are
-        multiple transactions that have the same greatest number of inputs, show
-        all of them.  */
-
-    /* 6. What is the average transaction value? Transaction value is the sum of
-    all outputs’ value.
-     /*7. How many coinbase transactions are there in the dataset? */
-    8. What is the average number of transactions per block?
-     */
-
+    /**
+     * write files to s3
+     *
+     * */
+    WriteToS3.write("numBlocks="+numBlocks)
     WriteToS3.write("1. number of transactions: " + numTrans + " & addresses:" + numAddress)
     WriteToS3.write("4.2. total number of transactions/address : " + numTrans / numAddress)
     WriteToS3.write("5." + "\n" + maxIp)

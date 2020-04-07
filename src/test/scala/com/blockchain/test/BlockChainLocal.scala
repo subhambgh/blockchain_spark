@@ -1,6 +1,6 @@
 package com.blockchain.test
 
-import com.blockchain.app.BlockChain3.{AddressSchema, EdgeSchema}
+import com.blockchain.app.PreProcForPart2.{AddressSchema, EdgeSchema}
 import com.blockchain.app.ReadPropFromLocal
 import com.blockchain.helper.ReadPropFromS3
 import org.apache.spark.sql.functions.{col, lit}

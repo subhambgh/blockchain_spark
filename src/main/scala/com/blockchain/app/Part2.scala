@@ -4,7 +4,11 @@ import com.blockchain.helper.{ReadFromHDFS, ReadPropFromS3, WriteToS3}
 import org.apache.spark.sql.functions.{col, desc, lit, sum, when}
 import org.apache.spark.sql.{Encoders, SparkSession}
 
-object BlockChain4 {
+/**
+ * things in here are similar to Part1_2
+ * please refer to the descriptions there
+ * */
+object Part2 {
 
   case class TxnIpSchema(txID: Int, input_seq: Int, prev_txID: Int, prev_output_seq: Int, addrID: Int, sum: BigInt)
   case class TxnOpSchema(txID: Int, output_seq: Int, addrID: Int, sum: BigInt)
@@ -19,7 +23,7 @@ object BlockChain4 {
 
     val spark = SparkSession
       .builder()
-      .appName("BlockChain4")
+      .appName("Part2")
       .getOrCreate()
     val sqlContext = spark.sqlContext
 
@@ -85,20 +89,6 @@ object BlockChain4 {
 
     val totalBalance = BigDecimal(finalTxnUtxoDf.select(sum("utxo").as("totalBalance")).
       first().getAs("totalBalance").toString)
-
-
-    /*2. What is the Bitcoin address that is holding the greatest amount of bitcoins?
-        How much is that exactly? Note that the address here must be
-        a valid Bitcoin address string. To answer this, you need to calculate the
-        balance of each address. The balance here is the total amount of bitcoins
-        in the UTXOs of an address.
-        3. What is the average balance per address?
-        4. What is the average number of input and output transactions per address?
-        What is the average number of transactions per address (including both
-        inputs and outputs)? An output transaction of an address is the transaction
-        that is originated from that address. Likewise, an input transaction
-        of an address is the transaction that sends bitcoins to that address.
-     */
 
     WriteToS3.write("2. "+ maxAdd_maxSum.getAs[BigInt]("userID")
       + " : user has greatest amount of bitcoin= " + maxAdd_maxSum.getAs[BigDecimal]("utxo"))

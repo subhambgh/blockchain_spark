@@ -5,9 +5,8 @@ import org.apache.spark.sql.{Encoders, SparkSession}
 import org.graphframes._
 import org.apache.spark.SparkConf
 import org.apache.spark.SparkContext
-import org.apache.spark.sql.functions._
 
-object BlockChain3 {
+object PreProcForPart2 {
 
   case class EdgeSchema(src: Int, dst: Int, txID: Int)
   case class AddressSchema(id: Int)
@@ -19,7 +18,7 @@ object BlockChain3 {
 
     val spark = SparkSession
       .builder()
-      .appName("BlockChain3")
+      .appName("PreProcForPart2")
       .getOrCreate()
 
     val edgeSchema = Encoders.product[EdgeSchema].schema
@@ -36,10 +35,22 @@ object BlockChain3 {
       .schema(addSchema)
       .load(ReadPropFromS3.getProperties("add"))
 
-    val edgeFinalDf = edgeDf.filter(!(col("src")===lit(-1)))
+    val graph = GraphFrame(addDf, edgeDf)
 
-    val graph = GraphFrame(addDf, edgeFinalDf)
-
+    /**
+     *
+     * most interesting part -PART II
+     *          - using graphx
+     *  Algorithm
+     *    Option 1.
+     *      - Graph
+     *      - create vertices - comprising of the addrID's from the addresses.dat
+     *      - create edges - using data from the preprocessing step
+     *      - now use connected component analysis - to generate User Id's
+     *    Option 2. using partition over transaction id and use rowcount to give a user Id
+     *
+     * finally, Write to S3
+     * */
     val cc = graph.connectedComponents
       .run()
       .write

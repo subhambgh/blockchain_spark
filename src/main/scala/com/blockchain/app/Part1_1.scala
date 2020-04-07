@@ -4,7 +4,7 @@ import com.blockchain.helper.{ReadFromHDFS, ReadPropFromS3, WriteToS3}
 import org.apache.spark.sql.functions.{col, desc, sum,lit, when}
 import org.apache.spark.sql.{Encoders, SparkSession}
 
-object BlockChain1 {
+object Part1_1 {
 
   case class TxnIpSchema(txID: Int, input_seq: Int, prev_txID: Int, prev_output_seq: Int, addrID: Int, sum: BigInt)
   case class TxnOpSchema(txID: Int, output_seq: Int, addrID: Int, sum: BigInt)
@@ -15,7 +15,7 @@ object BlockChain1 {
 
     val spark = SparkSession
       .builder()
-      .appName("BlockChain1")
+      .appName("Part1_1")
       .getOrCreate()
     val sqlContext = spark.sqlContext
 
@@ -35,6 +35,10 @@ object BlockChain1 {
       load(ReadPropFromS3.getProperties("txout")).
       select( "txID","addrID", "sum")
 
+    /**
+     * UTXO for an addresses is calculated as: (sum of amount out) - (sum of amount in) to that address
+     *
+     * */
     val groupByAddIpDf = txnIpDf.groupBy(col("addrID")).agg(sum("sum").as("utxoIp"))
     val groupByAddOpDf = txnOpDf.groupBy(col("addrID")).agg(sum("sum").as("utxoOp"))
     val txnUtxoDf = groupByAddIpDf.as("groupByAddIpDf").join(groupByAddOpDf.as("groupByAddOpDf"),
@@ -44,6 +48,12 @@ object BlockChain1 {
         col("groupByAddOpDf.utxoOp").as("utxoOp"),
         col("groupByAddIpDf.utxoIp").as("utxoIp"))
 
+    /**
+     * case 1. if add is not present in txout - replace address with txin address
+     * case 2. in above case, when an add isn't present
+     *        - its utxo will be null, thus, replace with groupByAddOpDf.utxoOp
+     * case 3. if balance is negative - cannot be the case
+     * */
     val finalTxnUtxoDf = txnUtxoDf.withColumn("utxo",
       when(col("utxoOp").isNull, lit(-1)*col("utxoIp")).otherwise(
         when(col("utxoIp").isNull,col("utxoOp")).otherwise(
@@ -52,22 +62,23 @@ object BlockChain1 {
         .withColumn("addrID", when( col("outAddrID").isNull,
       col("inAddrID")).otherwise(col("outAddrID")))
       .cache()
-
-    //case 1. if add is not present in txout - replace address with txin address
-    //case 2. in above case, when an add isn't present
-      // - its utxo will be null, thus, replace with groupByAddOpDf.utxoOp
-    //case 3. if balance is negative - cannot be the case
-
     val maxAdd_maxSum = finalTxnUtxoDf.orderBy(desc("utxo")).first()
-
     val totalBalance = BigDecimal(finalTxnUtxoDf.select(sum("utxo").as("totalBalance")).
       first().getAs("totalBalance").toString)
 
+
+    /**
+     * now to calculate the total number of I/p and O/p transactions
+     * remember, txin can have multiple rows for a single transactions - so we can't directly count the num rows
+     * So, we group by trans id first and then count the num rows
+     *
+     * */
+      //ip
     val groupByTransIpDf = txnIpDf.groupBy(col("txID")).agg(sum("sum").as("txIpSum"))
     groupByTransIpDf.createOrReplaceTempView("groupByTransIpDf")
     val numIpTrans = BigDecimal(sqlContext.sql(
       "SELECT count(1) AS count FROM groupByTransIpDf ").first().getAs("count").toString)
-
+      //op
     val groupByTransOpDf = txnOpDf.groupBy(col("txID")).agg(sum("sum").as("txOpSum"))
     groupByTransOpDf.createOrReplaceTempView("groupByTransOpDf")
     val numOpTrans_sumTotalOpTrans = sqlContext.sql(
@@ -75,28 +86,15 @@ object BlockChain1 {
     val numOpTrans:BigDecimal = BigDecimal(numOpTrans_sumTotalOpTrans.getAs("count").toString)
     val sumTotalOpTrans:BigDecimal = BigDecimal(numOpTrans_sumTotalOpTrans.getAs("opsum").toString)
 
-    /*1. What is the number of transactions and addresses in the dataset?*/
-    //Writer.write("number of transactions: " + numTrans + " & addresses:" + numAddress);
-
-    /*2. What is the Bitcoin address that is holding the greatest amount of bitcoins?
-        How much is that exactly? Note that the address here must be
-        a valid Bitcoin address string. To answer this, you need to calculate the
-        balance of each address. The balance here is the total amount of bitcoins
-        in the UTXOs of an address.*/
-    /*
-    /* 3. What is the average balance per address? */
-    4. What is the average number of input and output transactions per address?
-    What is the average number of transactions per address (including both
-    inputs and outputs)? An output transaction of an address is the transaction
-    that is originated from that address. Likewise, an input transaction
-    of an address is the transaction that sends bitcoins to that address.
-    */
-
-    WriteToS3.write("totalBalance"+totalBalance)
-    WriteToS3.write("numAddress"+numAddress)
-    WriteToS3.write("numIpTrans"+numIpTrans)
-    WriteToS3.write("numOpTrans"+numOpTrans)
-    WriteToS3.write("sumTotalOpTrans"+sumTotalOpTrans)
+    /**
+     * write files to s3
+     *
+     * */
+    WriteToS3.write("totalBalance="+totalBalance)
+    WriteToS3.write("numAddress="+numAddress)
+    WriteToS3.write("numIpTrans="+numIpTrans)
+    WriteToS3.write("numOpTrans="+numOpTrans)
+    WriteToS3.write("sumTotalOpTrans="+sumTotalOpTrans)
 
     WriteToS3.write("2. "+ maxAdd_maxSum.getAs[BigInt]("addrID")
       + " : address has greatest amount of bitcoin= " + maxAdd_maxSum.getAs[BigDecimal]("utxo"))
