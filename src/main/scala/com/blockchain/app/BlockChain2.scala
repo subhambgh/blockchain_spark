@@ -12,9 +12,9 @@ object BlockChain2 {
   def main(args: Array[String]): Unit = {
 
     val sumTotalOpTrans:BigDecimal = BigDecimal(args(0))
-    val numAddress:BigDecimal = BigDecimal(args(1))
-    val numTrans: BigDecimal  = BigDecimal(ReadFromHDFS.readLastLineFromHDFS(ReadPropFromS3.getProperties("tx")))
-    val numBlocks: BigDecimal  = BigDecimal(ReadFromHDFS.readLastLineFromHDFS(ReadPropFromS3.getProperties("bh")))
+    val numAddress:BigDecimal = BigDecimal(ReadFromHDFS.readNumLineFromHDFS(ReadPropFromS3.getProperties("readLinesAdd")))
+    val numTrans: BigDecimal  = BigDecimal(ReadFromHDFS.readNumLineFromHDFS(ReadPropFromS3.getProperties("readLinesTx")))
+    val numBlocks: BigDecimal  = BigDecimal(ReadFromHDFS.readNumLineFromHDFS(ReadPropFromS3.getProperties("readLinesBh")))
 
     val spark = SparkSession
       .builder()

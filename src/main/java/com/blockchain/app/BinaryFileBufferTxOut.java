@@ -38,7 +38,7 @@ public class BinaryFileBufferTxOut implements IOStringStack {
         if(line==null)
             this.cache = null;
         else{
-            String[] txout = this.fbr.readLine().split("\t");
+            String[] txout = line.split("\t");
             this.cache = txout[0]+"\t"+txout[2];
         }
     }

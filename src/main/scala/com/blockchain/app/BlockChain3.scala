@@ -20,7 +20,6 @@ object BlockChain3 {
     val spark = SparkSession
       .builder()
       .appName("BlockChain3")
-      .config("spark.master", "local")
       .getOrCreate()
 
     val edgeSchema = Encoders.product[EdgeSchema].schema
@@ -47,7 +46,8 @@ object BlockChain3 {
       .format("csv")
       .option("header","false")
       .option("delimiter", "\t")
-      .save("s3://"+ReadPropFromS3.getProperties("bucketName")+"/data/addr_jcsc.txt")
+      .save(ReadPropFromS3.getProperties("fs.default.name")+"blockchain-bucket/data/addr_jcsc.txt")
+
   }
 
 }

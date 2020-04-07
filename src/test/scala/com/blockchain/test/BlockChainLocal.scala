@@ -1,5 +1,8 @@
 package com.blockchain.test
 
+import com.blockchain.app.BlockChain3.{AddressSchema, EdgeSchema}
+import com.blockchain.app.ReadPropFromLocal
+import com.blockchain.helper.ReadPropFromS3
 import org.apache.spark.sql.functions.{col, lit}
 import org.apache.spark.sql.{Encoders, SparkSession}
 import org.apache.spark.{SparkConf, SparkContext}
@@ -25,29 +28,27 @@ object BlockChainLocal {
       .option("header", "false")
       .option("delimiter", "\t")
       .schema(edgeSchema)
-      .load("E:/hw2/local/add_edges_s.txt")
+      .load(ReadPropFromLocal.getProperties("edge"))
 
     val addSchema = Encoders.product[AddressSchema].schema
     val addDf = spark.read.format("csv")
       .option("header", "false")
       .option("delimiter", "\t")
       .schema(addSchema)
-      .load("E:/hw2/local/addresses.txt")
+      .load(ReadPropFromLocal.getProperties("add"))
 
     val edgeFinalDf = edgeDf.filter(!(col("src")===lit(-1)))
-
-    edgeFinalDf.show()
 
     val graph = GraphFrame(addDf, edgeFinalDf)
 
     val cc = graph.connectedComponents
       .run()
+      .repartition(1)
       .write
       .format("csv")
       .option("header","false")
       .option("delimiter", "\t")
       .save("E:/hw2/local/addr_jcsc.txt")
-
   }
 
 }

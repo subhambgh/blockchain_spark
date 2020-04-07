@@ -1,7 +1,7 @@
 package com.blockchain.app
 
 import com.blockchain.helper.{ReadFromHDFS, ReadPropFromS3, WriteToS3}
-import org.apache.spark.sql.functions.{col, desc, sum}
+import org.apache.spark.sql.functions.{col, desc, lit, sum, when}
 import org.apache.spark.sql.{Encoders, SparkSession}
 
 object BlockChain4 {
@@ -12,14 +12,14 @@ object BlockChain4 {
 
   def main(args: Array[String]): Unit = {
 
-    val numAddress: BigDecimal  = BigDecimal(ReadFromHDFS.readLastLineFromHDFS(ReadPropFromS3.getProperties("add")))
-    val numIpTrans: BigDecimal  = BigDecimal(ReadFromHDFS.readNumLineFromHDFS(ReadPropFromS3.getProperties("txin")))
-    val numOpTrans: BigDecimal  = BigDecimal(args(0))
-    val sumTotalOpTrans: BigDecimal  = BigDecimal(args(1))
+    val numAddress: BigDecimal  = BigDecimal(ReadFromHDFS.readNumLineFromHDFS(ReadPropFromS3.getProperties("readLinesAdd")))
+    val numIpTrans: BigDecimal  = BigDecimal(args(0))
+    val numOpTrans: BigDecimal  = BigDecimal(args(1))
+    val sumTotalOpTrans: BigDecimal  = BigDecimal(args(2))
 
     val spark = SparkSession
       .builder()
-      .appName("BlockChain1")
+      .appName("BlockChain4")
       .getOrCreate()
     val sqlContext = spark.sqlContext
 
@@ -66,14 +66,24 @@ object BlockChain4 {
       .agg(sum("sum").as("utxoOp"))
 
     val txnUtxoDf = groupByUsrIpDf.as("groupByUsrIpDf").join(groupByUsrOpDf.as("groupByUsrOpDf"),
-          groupByUsrIpDf("userID") === groupByUsrOpDf("userID"), "right_outer")
-      .select(col("groupByUsrOpDf.userID").as("userID"),
-        (col("groupByUsrOpDf.utxoOp")-col("groupByUsrIpDf.utxoIp")).as("utxo"))
+          groupByUsrIpDf("userID") === groupByUsrOpDf("userID"), "full_outer")
+      .select(col("groupByUsrOpDf.userID").as("outUserID"),
+        col("groupByUsrIpDf.userID").as("inUserID"),
+        col("groupByUsrOpDf.utxoOp").as("utxoOp"),
+        col("groupByUsrIpDf.utxoIp").as("utxoIp"))
+
+    val finalTxnUtxoDf = txnUtxoDf.withColumn("utxo",
+      when(col("utxoOp").isNull, lit(-1)*col("utxoIp")).otherwise(
+        when(col("utxoIp").isNull,col("utxoOp")).otherwise(
+          col("utxoOp") - col("utxoIp")
+        )))
+      .withColumn("userID", when( col("outUserID").isNull,
+        col("inUserID")).otherwise(col("outUserID")))
       .cache()
 
-    val maxAdd_maxSum = txnUtxoDf.orderBy(desc("utxo")).first()
+    val maxAdd_maxSum = finalTxnUtxoDf.orderBy(desc("utxo")).first()
 
-    val totalBalance = BigDecimal(txnUtxoDf.select(sum("utxo").as("totalBalance")).
+    val totalBalance = BigDecimal(finalTxnUtxoDf.select(sum("utxo").as("totalBalance")).
       first().getAs("totalBalance").toString)
 
 

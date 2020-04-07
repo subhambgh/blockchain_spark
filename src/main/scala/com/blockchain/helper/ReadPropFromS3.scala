@@ -10,7 +10,7 @@ object ReadPropFromS3 {
 
   val s3Client: AmazonS3 = AmazonS3ClientBuilder.standard.withRegion(Regions.US_EAST_1).build
   val s3Object: S3Object  = s3Client.getObject(
-    new GetObjectRequest(ReadPropFromS3.getProperties("bucketName"), "data/config-AWS.properties"))
+    new GetObjectRequest("blockchain-bucket", "data/config-AWS.properties"))
   val prop = new Properties()
   prop.load(s3Object.getObjectContent())
   def getProperties(key:String) : String  = {

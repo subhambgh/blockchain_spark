@@ -13,14 +13,14 @@ import java.util.*;
  */
 public class PreProcessing {
     public static void main(String[] args) throws Exception {
-        Comparator<String> cmp = (op1, op2) ->
-                new BigInteger(op1.split("\t")[0]).compareTo(new BigInteger(op2.split("\t")[0]));
-        removeDuplicatesfromFile(new File(ReadPropFromLocal.getProperties("txout"))
-                ,new File("D:/singleOpTxn.txt"));
-        List<File> files = new ArrayList<>();
-        files.add(new File(ReadPropFromLocal.getProperties("txin")));
-        files.add(new File("D:/singleOpTxn.txt"));
-        mergeSortedFiles(files, new File("D:/mergeTxnIpSingleOp.txt"),cmp,false);
+//        Comparator<String> cmp = (op1, op2) ->
+//                new Integer(op1.split("\t")[0]).compareTo(new Integer(op2.split("\t")[0]));
+//        removeDuplicatesfromFile(new File(ReadPropFromLocal.getProperties("txout"))
+//                ,new File("D:/singleOpTxn.txt"));
+//        List<File> files = new ArrayList<>();
+//        files.add(new File(ReadPropFromLocal.getProperties("txin")));
+//        files.add(new File("D:/singleOpTxn.txt"));
+//        mergeSortedFiles(files, new File("D:/mergeTxnIpSingleOp.txt"),cmp,false);
         getEdgeList(new File("D:/mergeTxnIpSingleOp.txt"),new File("D:/addr_edges.txt"));
         //sort /unique  < E:/hw2/addr_edges.dat > E:/hw2/addr_edges_s.dat
 
@@ -35,15 +35,17 @@ public class PreProcessing {
      *      addID1 + \t + addID2 + \t + txID1
      */
     public static void getEdgeList(File inputFile,File outputFile) throws Exception {
-        BigInteger txl=BigInteger.ZERO,addrl=BigInteger.ZERO,addrl2=BigInteger.ZERO;
+        Integer txl=new Integer(0),addrl=new Integer(0),addrl2=new Integer(0);
         final BufferedReader br = new BufferedReader(
                 new InputStreamReader(new FileInputStream(inputFile)));
         FileOutputStream fos = new FileOutputStream(outputFile);
         final BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(fos));
         String line;
         while ((line = br.readLine()) != null){
-            BigInteger line_txID = new BigInteger(line.split("\t")[0]);
-            BigInteger line_addID = new BigInteger(line.split("\t")[1]);
+            Integer line_txID = new Integer(line.split("\t")[0]);
+            Integer line_addID = new Integer(line.split("\t")[1]);
+            if(line_addID.equals(-1))
+                continue;
             String writeLine1 = null,writeLine2 = null;
             if(line_txID.equals(txl)){
                 if(!addrl.equals(line_addID)) writeLine1= addrl+"\t"+line_addID+"\t"+line_txID+"\n";

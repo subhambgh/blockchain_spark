@@ -1,7 +1,7 @@
 package com.blockchain.app
 
 import com.blockchain.helper.{ReadFromHDFS, ReadPropFromS3, WriteToS3}
-import org.apache.spark.sql.functions.{col, desc, sum}
+import org.apache.spark.sql.functions.{col, desc, sum,lit, when}
 import org.apache.spark.sql.{Encoders, SparkSession}
 
 object BlockChain1 {
@@ -11,8 +11,7 @@ object BlockChain1 {
 
   def main(args: Array[String]): Unit = {
 
-    val numAddress: BigDecimal  = BigDecimal(ReadFromHDFS.readLastLineFromHDFS(ReadPropFromS3.getProperties("add")))
-    val numIpTrans: BigDecimal  = BigDecimal(ReadFromHDFS.readNumLineFromHDFS(ReadPropFromS3.getProperties("txin")))
+    val numAddress: BigDecimal  = BigDecimal(ReadFromHDFS.readNumLineFromHDFS(ReadPropFromS3.getProperties("readLinesAdd")))
 
     val spark = SparkSession
       .builder()
@@ -26,7 +25,7 @@ object BlockChain1 {
       option("delimiter", "\t").
       schema(txnIpSchema).
       load(ReadPropFromS3.getProperties("txin")).
-      select("addrID", "sum")
+      select("txID","addrID", "sum")
 
     val txnOpSchema = Encoders.product[TxnOpSchema].schema
     val txnOpDf = spark.read.format("csv").
@@ -34,37 +33,45 @@ object BlockChain1 {
       option("delimiter", "\t").
       schema(txnOpSchema).
       load(ReadPropFromS3.getProperties("txout")).
-      select( "addrID", "sum")
-//
-//    val txnIpUtxoDf = txnIpDf.as("txnIpDf1").join(txnIpDf.as("txnIpDf2"),
-//      col("txnIpDf1.txID") === col("txnIpDf2.prev_txID"), "left_anti").
-//      dropDuplicates("txID")
-//
-//    val txnIpUtxoDf_txnOpDf = txnIpUtxoDf.as("txnIpUtxoDf").join(txnOpDf.as("txnOpDf"),
-//      txnIpUtxoDf("txID") === txnOpDf("txID"), "inner").
-//      select(col("txnIpUtxoDf.*"), col("txnOpDf.addrID"), col("txnOpDf.sum"))
-//
-//    val finalDf = txnIpUtxoDf_txnOpDf.groupBy(col("addrID")).agg(sum("sum").as("utxo")).
-//      orderBy(desc("utxo")).cache()
-//
-//    val maxAdd_maxSum = finalDf.limit(1).first()
+      select( "txID","addrID", "sum")
 
     val groupByAddIpDf = txnIpDf.groupBy(col("addrID")).agg(sum("sum").as("utxoIp"))
     val groupByAddOpDf = txnOpDf.groupBy(col("addrID")).agg(sum("sum").as("utxoOp"))
     val txnUtxoDf = groupByAddIpDf.as("groupByAddIpDf").join(groupByAddOpDf.as("groupByAddOpDf"),
-          groupByAddIpDf("addrID") === groupByAddOpDf("addrID"), "right_outer")
-      .select(col("groupByAddOpDf.addrID").as("addrID"),
-        (col("groupByAddOpDf.utxoOp")-col("groupByAddIpDf.utxoIp")).as("utxo"))
+          groupByAddIpDf("addrID") === groupByAddOpDf("addrID"), "full_outer")
+      .select(col("groupByAddOpDf.addrID").as("outAddrID"),
+        col("groupByAddIpDf.addrID").as("inAddrID"),
+        col("groupByAddOpDf.utxoOp").as("utxoOp"),
+        col("groupByAddIpDf.utxoIp").as("utxoIp"))
+
+    val finalTxnUtxoDf = txnUtxoDf.withColumn("utxo",
+      when(col("utxoOp").isNull, lit(-1)*col("utxoIp")).otherwise(
+        when(col("utxoIp").isNull,col("utxoOp")).otherwise(
+          col("utxoOp") - col("utxoIp")
+        )))
+        .withColumn("addrID", when( col("outAddrID").isNull,
+      col("inAddrID")).otherwise(col("outAddrID")))
       .cache()
 
-    val maxAdd_maxSum = txnUtxoDf.orderBy(desc("utxo")).first()
+    //case 1. if add is not present in txout - replace address with txin address
+    //case 2. in above case, when an add isn't present
+      // - its utxo will be null, thus, replace with groupByAddOpDf.utxoOp
+    //case 3. if balance is negative - cannot be the case
 
-    /* 3. What is the average balance per address? */
-    val totalBalance = BigDecimal(txnUtxoDf.select(sum("utxo").as("totalBalance")).
+    val maxAdd_maxSum = finalTxnUtxoDf.orderBy(desc("utxo")).first()
+
+    val totalBalance = BigDecimal(finalTxnUtxoDf.select(sum("utxo").as("totalBalance")).
       first().getAs("totalBalance").toString)
 
-    txnOpDf.createOrReplaceTempView("txnOpDf")
-    val numOpTrans_sumTotalOpTrans = sqlContext.sql("SELECT count(1) AS count,sum(sum) AS opsum FROM txnOpDf").first()
+    val groupByTransIpDf = txnIpDf.groupBy(col("txID")).agg(sum("sum").as("txIpSum"))
+    groupByTransIpDf.createOrReplaceTempView("groupByTransIpDf")
+    val numIpTrans = BigDecimal(sqlContext.sql(
+      "SELECT count(1) AS count FROM groupByTransIpDf ").first().getAs("count").toString)
+
+    val groupByTransOpDf = txnOpDf.groupBy(col("txID")).agg(sum("sum").as("txOpSum"))
+    groupByTransOpDf.createOrReplaceTempView("groupByTransOpDf")
+    val numOpTrans_sumTotalOpTrans = sqlContext.sql(
+      "SELECT count(1) AS count,sum(txOpSum) AS opsum FROM groupByTransOpDf ").first()
     val numOpTrans:BigDecimal = BigDecimal(numOpTrans_sumTotalOpTrans.getAs("count").toString)
     val sumTotalOpTrans:BigDecimal = BigDecimal(numOpTrans_sumTotalOpTrans.getAs("opsum").toString)
 
@@ -77,12 +84,19 @@ object BlockChain1 {
         balance of each address. The balance here is the total amount of bitcoins
         in the UTXOs of an address.*/
     /*
+    /* 3. What is the average balance per address? */
     4. What is the average number of input and output transactions per address?
     What is the average number of transactions per address (including both
     inputs and outputs)? An output transaction of an address is the transaction
     that is originated from that address. Likewise, an input transaction
     of an address is the transaction that sends bitcoins to that address.
     */
+
+    WriteToS3.write("totalBalance"+totalBalance)
+    WriteToS3.write("numAddress"+numAddress)
+    WriteToS3.write("numIpTrans"+numIpTrans)
+    WriteToS3.write("numOpTrans"+numOpTrans)
+    WriteToS3.write("sumTotalOpTrans"+sumTotalOpTrans)
 
     WriteToS3.write("2. "+ maxAdd_maxSum.getAs[BigInt]("addrID")
       + " : address has greatest amount of bitcoin= " + maxAdd_maxSum.getAs[BigDecimal]("utxo"))
