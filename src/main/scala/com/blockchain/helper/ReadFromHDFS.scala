@@ -14,8 +14,8 @@ import org.apache.hadoop.fs.{FileSystem, Path}
 object ReadFromHDFS {
   val fs = FileSystem.get(new URI(ReadPropFromS3.getProperties("fs.default.name")), new Configuration())
 
-  def readNumLineFromHDFS(file: String): BigInt = {
-    var newlineCount = BigInt("0")
+  def readNumLineFromHDFS(file: String): Long = {
+    var newlineCount = 0L
     val br = new BufferedReader(new InputStreamReader(fs.open(new Path(file))))
     Stream.continually(br.readLine()).takeWhile(_ != null).foreach(line =>newlineCount = newlineCount+1)
     newlineCount

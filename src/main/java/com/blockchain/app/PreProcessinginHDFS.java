@@ -1,11 +1,18 @@
 package com.blockchain.app;
 
+import com.blockchain.helper.ReadPropFromS3;
 import com.google.code.externalsorting.ExternalSort;
 import com.google.code.externalsorting.IOStringStack;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 
 import java.io.*;
-import java.nio.charset.Charset;
-import java.util.*;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 
 /**
  * This class is used to pre-process the data for HW2. Part2.
@@ -30,20 +37,33 @@ import java.util.*;
  *      *        *   out:
  *      *        *      addID1 + \t + addID2 + \t + txID1
  */
-public class PreProcessing {
+public class PreProcessinginHDFS {
+    public static FileSystem fs;
+
+    static {
+        try {
+            fs = FileSystem.get(new URI(ReadPropFromS3.getProperties("fs.default.name")), new Configuration());
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (URISyntaxException e) {
+            e.printStackTrace();
+        }
+    }
+
     public static void main(String[] args) throws Exception {
         /**Step 1 */
-        removeDuplicatesfromFile(new File(ReadPropFromLocal.getProperties("txout"))
-                ,new File("D:/singleOpTxn.txt"));
+        removeDuplicatesfromFile(new Path(ReadPropFromS3.getProperties("readLinesTxout"))
+                ,new Path(ReadPropFromS3.getProperties("singleOpTxn")));
         /**Step 2 */
-        List<File> files = new ArrayList<>();
-        files.add(new File(ReadPropFromLocal.getProperties("txin")));
-        files.add(new File("D:/singleOpTxn.txt"));
+        List<Path> files = new ArrayList<>();
+        files.add(new Path((ReadPropFromS3.getProperties("readLinesTxin"))));
+        files.add(new Path(ReadPropFromS3.getProperties("singleOpTxn")));
         Comparator<String> cmp = (op1, op2) ->
                 new Integer(op1.split("\t")[0]).compareTo(new Integer(op2.split("\t")[0]));
-        mergeSortedFiles(files, new File("D:/mergeTxnIpSingleOp.txt"),cmp,false);
+        mergeSortedFiles(files, new Path(ReadPropFromS3.getProperties("mergeTxnIpSingleOp")),cmp,false);
         /**Step 3 */
-        getEdgeList(new File("D:/mergeTxnIpSingleOp.txt"),new File("D:/addr_edges.txt"));
+        getEdgeList(new Path(ReadPropFromS3.getProperties("mergeTxnIpSingleOp")),
+                new Path(ReadPropFromS3.getProperties("addr_edges")));
         /**Step 4 */
         /**
          * was unable to run this WINDOWS script through java, in the given time :(
@@ -62,12 +82,11 @@ public class PreProcessing {
      *   out:
      *      addID1 + \t + addID2 + \t + txID1
      */
-    public static void getEdgeList(File inputFile,File outputFile) throws Exception {
+    public static void getEdgeList(Path inputFile,Path outputFile) throws Exception {
         Integer txl=new Integer(0),addrl=new Integer(0),addrl2=new Integer(0);
         final BufferedReader br = new BufferedReader(
-                new InputStreamReader(new FileInputStream(inputFile)));
-        FileOutputStream fos = new FileOutputStream(outputFile);
-        final BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(fos));
+                new InputStreamReader(fs.open(inputFile)));
+        final BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(fs.create(outputFile)));
         String line;
         while ((line = br.readLine()) != null){
             Integer line_txID = new Integer(line.split("\t")[0]);
@@ -101,19 +120,18 @@ public class PreProcessing {
      * txID + \t + addID
      *
      */
-    public static long mergeSortedFiles(List<File> infile, File outfile,
+    public static long mergeSortedFiles(List<Path> infile, Path outfile,
                                         final Comparator<String> cmp, boolean distinct) throws IOException {
         ArrayList<IOStringStack> bfbs = new ArrayList<IOStringStack>();
         BufferedReader brIn = new BufferedReader(
-                new InputStreamReader(new FileInputStream(infile.get(0)), Charset.defaultCharset()));
+                new InputStreamReader(fs.open(infile.get(0))));
         BinaryFileBufferTxIn bfbIn = new BinaryFileBufferTxIn(brIn);
         bfbs.add(bfbIn);
         BufferedReader brOut = new BufferedReader(
-                new InputStreamReader(new FileInputStream(infile.get(1)), Charset.defaultCharset()));
+                new InputStreamReader(fs.open(infile.get(1))));
         BinaryFileBufferTxOut bfbOut = new BinaryFileBufferTxOut(brOut);
         bfbs.add(bfbOut);
-        BufferedWriter fbw = new BufferedWriter(new OutputStreamWriter(
-                new FileOutputStream(outfile, true), Charset.defaultCharset()));
+        BufferedWriter fbw = new BufferedWriter(new OutputStreamWriter(fs.create(outfile)));
         long rowcounter = ExternalSort.mergeSortedFiles(fbw, cmp, distinct, bfbs);
 //        for (File f : infile)
 //            f.delete();
@@ -123,12 +141,12 @@ public class PreProcessing {
      * This finds the single o/p transactions
      *
      */
-    public static void removeDuplicatesfromFile(File inputFile, File outputFile) throws IOException {
+    public static void removeDuplicatesfromFile(Path inputFile, Path outputFile) throws IOException {
         int count=0;
         final BufferedReader br = new BufferedReader(
-                new InputStreamReader(new FileInputStream(inputFile)));
-        FileOutputStream fos = new FileOutputStream(outputFile);
-        final BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(fos));
+                new InputStreamReader(fs.open(inputFile)));
+        final BufferedWriter bw = new BufferedWriter(
+                new OutputStreamWriter(fs.create(outputFile)));
         String line,prevLine = br.readLine();
         while ((line = br.readLine()) != null){
             if(line.split("\t")[0].equals(prevLine.split("\t")[0]))

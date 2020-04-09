@@ -1,7 +1,7 @@
-package com.blockchain.app
+package com.blockchain.test
 
 import com.blockchain.helper.{ReadFromHDFS, ReadPropFromS3, WriteToS3}
-import org.apache.spark.sql.functions.{col, desc, sum,lit, when, count}
+import org.apache.spark.sql.functions._
 import org.apache.spark.sql.{Encoders, SparkSession}
 
 object Part1_1 {
@@ -11,11 +11,12 @@ object Part1_1 {
 
   def main(args: Array[String]): Unit = {
 
-    val numAddress = ReadFromHDFS.readNumLineFromHDFS(ReadPropFromS3.getProperties("readLinesAdd"))
+    val numAddress = 1//ReadFromHDFS.readNumLineFromHDFS(ReadPropFromS3.getProperties("readLinesAdd"))
 
     val spark = SparkSession
       .builder()
       .appName("Part1_1")
+      .config("spark.master", "local")
       .getOrCreate()
     val sqlContext = spark.sqlContext
 
@@ -24,7 +25,7 @@ object Part1_1 {
       option("header", "false").
       option("delimiter", "\t").
       schema(txnIpSchema).
-      load(ReadPropFromS3.getProperties("txin")).
+      load("E:/hw2/local/txin1.txt").
       select("txID","addrID", "sum")
 
     val txnOpSchema = Encoders.product[TxnOpSchema].schema
@@ -32,7 +33,7 @@ object Part1_1 {
       option("header", "false").
       option("delimiter", "\t").
       schema(txnOpSchema).
-      load(ReadPropFromS3.getProperties("txout")).
+      load("E:/hw2/local/txout.txt").
       select( "txID","addrID", "sum")
 
     /**
@@ -95,23 +96,33 @@ object Part1_1 {
     val numIpTransPerAdd = groupByTransAddIpDf.count()
     val numOpTransPerAdd = groupByTransAddOpDf.count()
 
+//    val txnCountDf = groupByTransAddIpDf.as("groupByTransAddIpDf")
+//      .join(groupByTransAddOpDf.as("groupByTransAddOpDf"),
+//      groupByTransAddIpDf("addrID") === groupByTransAddOpDf("addrID"), "full_outer")
+//      .select(col("groupByTransAddIpDf.ipCount").as("ipCount"),
+//        col("groupByTransAddOpDf.opCount").as("opCount"))
+//
+//    val numTxnCountPerAdd = txnCountDf.withColumn("tCount",
+//      when(col("opCount").isNull, lit(0))
+//        + when(col("ipCount").isNull, lit(0)))
+//        .select(col("tCount")).rdd.map(_(0).asInstanceOf[Long]).reduce(_+_)
+
     /**
      * write files to s3
      *
      * */
-    WriteToS3.write("totalBalance="+totalBalance)
-    WriteToS3.write("numAddress="+numAddress)
-    WriteToS3.write("numIpTransPerAdd="+numIpTransPerAdd)
-    WriteToS3.write("numOpTransPerAdd="+numOpTransPerAdd)
-    WriteToS3.write("sumTotalOpTrans="+sumTotalOpTrans)
-    //WriteToS3.write("numTxnCountPerAdd="+numTxnCountPerAdd)
-    WriteToS3.write("2. "+ maxAdd_maxSum.getAs[Long]("addrID")
+    println("totalBalance="+totalBalance)
+    println("numAddress="+numAddress)
+    println("numIpTransPerAdd="+numIpTransPerAdd)
+    println("numOpTransPerAdd="+numOpTransPerAdd)
+    println("sumTotalOpTrans="+sumTotalOpTrans)
+    //println("numTxnCountPerAdd="+numTxnCountPerAdd)
+    println("2. "+ maxAdd_maxSum.getAs[Long]("addrID")
       + " : address has greatest amount of bitcoin= " + maxAdd_maxSum.getAs[Long]("utxo"))
-    WriteToS3.write("3. avg balance/address: " + totalBalance.toDouble/numAddress)
-    WriteToS3.write("4.1. total number of i/p transactions/address : " + numIpTransPerAdd.toDouble/numAddress
+    println("3. avg balance/address: " + totalBalance.toDouble/numAddress)
+    println("4.1. total number of i/p transactions/address : " + numIpTransPerAdd.toDouble/numAddress
       + " & o/p transactions/address : " + numOpTransPerAdd.toDouble/numAddress)
-    WriteToS3.write("number of address: "+ numAddress+" & sum of total output transaction amounts: "+sumTotalOpTrans)
-    WriteToS3.close()
+    println("number of address: "+ numAddress+" & sum of total output transaction amounts: "+sumTotalOpTrans)
 
   }
 

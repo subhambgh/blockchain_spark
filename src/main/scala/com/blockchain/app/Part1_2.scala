@@ -11,10 +11,10 @@ object Part1_2 {
 
   def main(args: Array[String]): Unit = {
 
-    val sumTotalOpTrans:BigDecimal = BigDecimal(args(0))
-    val numAddress:BigDecimal = BigDecimal(ReadFromHDFS.readNumLineFromHDFS(ReadPropFromS3.getProperties("readLinesAdd")))
-    val numTrans: BigDecimal  = BigDecimal(ReadFromHDFS.readNumLineFromHDFS(ReadPropFromS3.getProperties("readLinesTx")))
-    val numBlocks: BigDecimal  = BigDecimal(ReadFromHDFS.readNumLineFromHDFS(ReadPropFromS3.getProperties("readLinesBh")))
+    val sumTotalOpTrans = args(0).toLong
+    val numAddress = ReadFromHDFS.readNumLineFromHDFS(ReadPropFromS3.getProperties("readLinesAdd"))
+    val numTrans  = ReadFromHDFS.readNumLineFromHDFS(ReadPropFromS3.getProperties("readLinesTx"))
+    val numBlocks  = ReadFromHDFS.readNumLineFromHDFS(ReadPropFromS3.getProperties("readLinesBh"))
 
     val spark = SparkSession
       .builder()
@@ -62,11 +62,11 @@ object Part1_2 {
      * */
     WriteToS3.write("numBlocks="+numBlocks)
     WriteToS3.write("1. number of transactions: " + numTrans + " & addresses:" + numAddress)
-    WriteToS3.write("4.2. total number of transactions/address : " + numTrans / numAddress)
+    WriteToS3.write("4.2. total number of transactions/address : " + numTrans.toDouble / numAddress)
     WriteToS3.write("5." + "\n" + maxIp)
-    WriteToS3.write("6. average transaction value :" + sumTotalOpTrans / numTrans)
+    WriteToS3.write("6. average transaction value :" + sumTotalOpTrans.toDouble / numTrans)
     WriteToS3.write("7. Number of coinbase transactions :" + numTransWithZeroIp)
-    WriteToS3.write("8. average number of transactions per block :" + numBlocks / numTrans)
+    WriteToS3.write("8. average number of transactions per block :" + numBlocks.toDouble / numTrans)
     WriteToS3.close()
   }
 

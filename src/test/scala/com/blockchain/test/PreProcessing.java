@@ -1,11 +1,16 @@
-package com.blockchain.app;
+package com.blockchain.test;
 
+import com.blockchain.app.BinaryFileBufferTxIn;
+import com.blockchain.app.BinaryFileBufferTxOut;
+import com.blockchain.app.ReadPropFromLocal;
 import com.google.code.externalsorting.ExternalSort;
 import com.google.code.externalsorting.IOStringStack;
 
 import java.io.*;
 import java.nio.charset.Charset;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 
 /**
  * This class is used to pre-process the data for HW2. Part2.
@@ -33,17 +38,17 @@ import java.util.*;
 public class PreProcessing {
     public static void main(String[] args) throws Exception {
         /**Step 1 */
-        removeDuplicatesfromFile(new File(ReadPropFromLocal.getProperties("txout"))
-                ,new File("D:/singleOpTxn.txt"));
+        removeDuplicatesfromFile(new File("E:/hw2/lan/txout.txt")
+                ,new File("E:/hw2/lan/singleOpTxn.txt"));
         /**Step 2 */
         List<File> files = new ArrayList<>();
-        files.add(new File(ReadPropFromLocal.getProperties("txin")));
-        files.add(new File("D:/singleOpTxn.txt"));
+        files.add(new File("E:/hw2/lan/txin.txt"));
+        files.add(new File("E:/hw2/lan/singleOpTxn.txt"));
         Comparator<String> cmp = (op1, op2) ->
                 new Integer(op1.split("\t")[0]).compareTo(new Integer(op2.split("\t")[0]));
-        mergeSortedFiles(files, new File("D:/mergeTxnIpSingleOp.txt"),cmp,false);
+        mergeSortedFiles(files, new File("E:/hw2/lan/mergeTxnIpSingleOp.txt"),cmp,false);
         /**Step 3 */
-        getEdgeList(new File("D:/mergeTxnIpSingleOp.txt"),new File("D:/addr_edges.txt"));
+        getEdgeList(new File("E:/hw2/lan/mergeTxnIpSingleOp.txt"),new File("E:/hw2/lan/addr_edges.txt"));
         /**Step 4 */
         /**
          * was unable to run this WINDOWS script through java, in the given time :(
@@ -63,7 +68,14 @@ public class PreProcessing {
      *      addID1 + \t + addID2 + \t + txID1
      */
     public static void getEdgeList(File inputFile,File outputFile) throws Exception {
-        Integer txl=new Integer(0),addrl=new Integer(0),addrl2=new Integer(0);
+        //Integer txl=new Integer(0),addrl=new Integer(0),addrl2=new Integer(0);
+        final BufferedReader bri = new BufferedReader(
+                new InputStreamReader(new FileInputStream(inputFile)));
+        String firstLine = bri.readLine();
+        Integer txl=new Integer(firstLine.split("\t")[0]);
+        Integer addrl=new Integer(firstLine.split("\t")[1]);
+        Integer addrl2=new Integer(addrl);
+        bri.close();
         final BufferedReader br = new BufferedReader(
                 new InputStreamReader(new FileInputStream(inputFile)));
         FileOutputStream fos = new FileOutputStream(outputFile);
@@ -80,10 +92,10 @@ public class PreProcessing {
                 if(!addrl2.equals(line_addID)) writeLine2 = addrl2+"\t"+line_addID+"\t"+line_txID+"\n";
             }
             else{
-                txl = line_txID;
+                txl = line_txID;        //new txID and addID
                 addrl = line_addID;
             }
-            addrl2 = line_addID;
+            addrl2 = line_addID;    //prev addID
             if(writeLine1==null && writeLine2==null);
             else if(writeLine1==null || writeLine2==null){
                 if(writeLine1==null) bw.write(writeLine2);
@@ -124,7 +136,7 @@ public class PreProcessing {
      *
      */
     public static void removeDuplicatesfromFile(File inputFile, File outputFile) throws IOException {
-        int count=0;
+        int count=1;
         final BufferedReader br = new BufferedReader(
                 new InputStreamReader(new FileInputStream(inputFile)));
         FileOutputStream fos = new FileOutputStream(outputFile);

@@ -1,10 +1,9 @@
-package com.blockchain.app
+package com.blockchain.test
 
 import com.blockchain.helper.ReadPropFromS3
+import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.spark.sql.{Encoders, SparkSession}
 import org.graphframes._
-import org.apache.spark.SparkConf
-import org.apache.spark.SparkContext
 
 object PreProcForPart2 {
 
@@ -13,12 +12,13 @@ object PreProcForPart2 {
 
   def main(args: Array[String]): Unit = {
 
-    val conf = new SparkConf().setAppName("BlockChain3")
+    val conf = new SparkConf().setAppName("BlockChain3").setMaster("local")
     val sparkContext = new SparkContext(conf).setCheckpointDir("/tmp")
 
     val spark = SparkSession
       .builder()
       .appName("PreProcForPart2")
+      .config("spark.master", "local")
       .getOrCreate()
 
     val edgeSchema = Encoders.product[EdgeSchema].schema
@@ -26,7 +26,7 @@ object PreProcForPart2 {
       .option("header", "false")
       .option("delimiter", "\t")
       .schema(edgeSchema)
-      .load(ReadPropFromS3.getProperties("edge"))
+      .load("E:/hw2/lan/addr_edges.txt")
       .distinct()
 
     val addSchema = Encoders.product[AddressSchema].schema
@@ -34,7 +34,7 @@ object PreProcForPart2 {
       .option("header", "false")
       .option("delimiter", "\t")
       .schema(addSchema)
-      .load(ReadPropFromS3.getProperties("add"))
+      .load("E:/hw2/lan/addresses.txt")
 
     val graph = GraphFrame(addDf, edgeDf)
 
@@ -58,7 +58,7 @@ object PreProcForPart2 {
       .format("csv")
       .option("header","false")
       .option("delimiter", "\t")
-      .save(ReadPropFromS3.getProperties("fs.default.name")+"blockchain-bucket/data/addr_jcsc.txt")
+      .save("E:/hw2/lan/addr_jcsc.txt")
   }
 
 }

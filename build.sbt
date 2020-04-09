@@ -3,7 +3,7 @@ lazy val root = (project in file(".")).
     name := "intellij_proj",
     version := "1.0",
     scalaVersion := "2.11.12",
-    mainClass in Compile := Some("com.blockchain.app.BlockChain1")
+    mainClass in Compile := Some("com.blockchain.app.PreProcessinginHDFS")
   )
 
 libraryDependencies ++= Seq(
