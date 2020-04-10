@@ -105,6 +105,8 @@ object Part2 {
     val numIpTransPerUsr = groupByTransUsrIpDf.count()
     val numOpTransPerUsr = groupByTransUsrOpDf.count()
 
+    
+
     WriteToS3.write("numUsers="+numUsers)
     WriteToS3.write("numIpTransPerUsr="+numIpTransPerUsr)
     WriteToS3.write("numOpTransPerUsr="+numOpTransPerUsr)
