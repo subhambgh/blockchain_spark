@@ -1,7 +1,8 @@
 package com.blockchain.app
 
+import com.blockchain.app.Part1_2.TxnHashSchema
 import com.blockchain.helper.{ReadFromHDFS, ReadPropFromS3, WriteToS3}
-import org.apache.spark.sql.functions.{col, count, desc, lit, sum, when}
+import org.apache.spark.sql.functions.{col, count, desc, lit, max, sum, when}
 import org.apache.spark.sql.{Encoders, SparkSession}
 
 /**
@@ -13,6 +14,7 @@ object Part2 {
   case class TxnIpSchema(txID: Int, input_seq: Int, prev_txID: Int, prev_output_seq: Int, addrID: Int, sum: Long)
   case class TxnOpSchema(txID: Int, output_seq: Int, addrID: Int, sum: Long)
   case class AddressSchema(addrID: Int, userID: Int)
+  case class TxnHashSchema(txID: Int, hash: String)
 
   def main(args: Array[String]): Unit = {
 
@@ -48,6 +50,13 @@ object Part2 {
       schema(addrSchema).
       load(ReadPropFromS3.getProperties("jcsc")).
       cache()
+
+    val txnHashSchema = Encoders.product[TxnHashSchema].schema
+    val txnHashDf = spark.read.format("csv").
+      option("header", "false").
+      option("delimiter", "\t").
+      schema(txnHashSchema).
+      load(ReadPropFromS3.getProperties("txh"))
 
     val numUsers = addDf.select("userID").distinct().count()
 
@@ -99,13 +108,21 @@ object Part2 {
       .agg(count(lit(1)).as("ipCount"))
       .cache()
     val groupByTransUsrOpDf = txnOpDfWithUserInfo.groupBy(col("txID"),col("userID"))
-      .agg(count(lit(1)).as("opCount"))
+      .agg(count(lit(1)).as("opCount"), sum("sum").as("opSum"))
       .cache()
 
     val numIpTransPerUsr = groupByTransUsrIpDf.count()
     val numOpTransPerUsr = groupByTransUsrOpDf.count()
 
-    
+    val txSendingMaxBitCoin = groupByTransUsrOpDf
+      .select(col("txID").as("txID"),
+        max(col("opSum")).as("maxSum"))
+      .where(col("userID")===maxAdd_maxSum.getAs[Long]("userID"))
+
+    val txSendingMaxBitCoinWithHash = txSendingMaxBitCoin
+      .join(txnHashDf.as("txnHashDf"), txSendingMaxBitCoin("txID") === txnHashDf("txID"), "inner").
+      select(col("txSendingMaxBitCoin.*"), col("txnHashDf.hash").as("hash"))
+        .first()
 
     WriteToS3.write("numUsers="+numUsers)
     WriteToS3.write("numIpTransPerUsr="+numIpTransPerUsr)
@@ -117,6 +134,8 @@ object Part2 {
     WriteToS3.write("4.1. total number of i/p transactions/user : " + numIpTransPerUsr.toDouble/numUsers
       + " & o/p transactions/address : " + numOpTransPerUsr.toDouble/numUsers)
     WriteToS3.write("number of users: "+ numUsers+" & sum of total output transaction amounts: "+sumTotalOpTrans)
+    WriteToS3.write("transaction sending max bitcoin: " +
+      "" +txSendingMaxBitCoinWithHash.getAs[Long]("hash"))
     WriteToS3.close()
 
   }
