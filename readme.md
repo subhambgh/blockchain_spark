@@ -60,8 +60,8 @@ m5.xlarge	4	16	16 GiB	96 GB	1
 2.	Now, for a single o/p transaction with txID say tx1, find the edge with same transaction ID as tx1 in the above graph.
 3.	Connect the o/p address with one of the vertices belonging to that edge as shown below
 ```
-![Joint Control](/images/jc.png)
-![Serial Control](/images/sc.png)
+![Joint Control](/jc.png)
+![Serial Control](/sc.png)
 
 #### Step 3: Calculate the connected component analysis on the formed graph using BFS/DFS
 All the connected component will belong to a single user.
