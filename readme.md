@@ -11,7 +11,7 @@ Java v8
 on AWS Educate Instance using EMR, S3 Modules
 ```
 
-System Configuration
+#### System Configuration
 ```
 Master Node
 EMR Instance Type	vCPU	ECU	Memory (GiB)**	Instance Storage (GB)**	Instance Count
