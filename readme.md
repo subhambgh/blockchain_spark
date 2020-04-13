@@ -14,16 +14,19 @@ on AWS Educate Instance using EMR, S3 Modules
 #### System Configuration
 ```
 Master Node
-EMR Instance Type	vCPU	ECU	Memory (GiB)**	Instance Storage (GB)**	Instance Count
-m5.xlarge	4	16	16 GiB	96 GB	1
+EMR Instance Type	| vCPU	| ECU | 	Memory (GiB)** |	Instance Storage (GB)** |	Instance Count
+--- | --- | --- | --- |--- |--- 
+m5.xlarge	| 4	| 16 |	16 GiB |	96 GB |	1
 
 Worker Nodes
-EMR Instance Type	vCPU	ECU	Memory (GiB)**	Instance Storage (GB)**	Instance Count
-m5.xlarge	4	16	16 GiB	96 GB	7
+EMR Instance Type	| vCPU	| ECU | 	Memory (GiB)** |	Instance Storage (GB)** |	Instance Count
+--- | --- | --- | --- |--- |--- 
+m5.xlarge |	4	| 16	| 16 GiB	| 96 GB |	7
 
 Task Node (spot instance)
-EMR Instance Type	vCPU	ECU	Memory (GiB)**	Instance Storage (GB)**	Instance Count
-m5.xlarge	4	16	16 GiB	96 GB	1
+EMR Instance Type	| vCPU	| ECU | 	Memory (GiB)** |	Instance Storage (GB)** |	Instance Count
+--- | --- | --- | --- |--- |--- 
+m5.xlarge	| 4	| 16 |	16 GiB |	96 GB |	1
 ** data specified above corresponds to available resources before spark and Hadoop installations
 * HDFS was used with default replication factor i.e., 3
 ```
