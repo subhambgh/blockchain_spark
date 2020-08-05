@@ -11,7 +11,7 @@ Part 2: Heuristics
   2.2 Serial Control - where all the O/P transaction with only a single O/P is controlled by the same user owning the I/P address.
 ```
 
-Dataset: Original dataset from https://senseable2015-6.mit.edu/bitcoin/ 
+#### Dataset: Original dataset from https://senseable2015-6.mit.edu/bitcoin/ 
 
 #### Technology Stack
 ```
@@ -38,9 +38,10 @@ EMR Instance Type	| vCPU	| ECU | 	Memory (GiB)** |	Instance Storage (GB)** |	Ins
 --- | --- | --- | --- |--- |--- 
 m5.xlarge	| 4	| 16 |	16 GiB |	96 GB |	1
 
+```
 ** data specified above corresponds to available resources before spark and Hadoop installations
 * HDFS was used with default replication factor i.e., 3
-
+```
 #### Main Class
 ```
 1.blockchain_spark/src/main/scala/com/blockchain/app/Part1_1.scala – Used for Part1. Q1 – Q4
@@ -48,12 +49,10 @@ m5.xlarge	| 4	| 16 |	16 GiB |	96 GB |	1
 3.blockchain_spark/src/main/java/com/blockchain/app/PreProcessinginHDFS.java – Used to preprocess txin.dat and txout.dat
 4.blockchain_spark/src/main/scala/com/blockchain/app/PreProcForPart2.scala – Draws Graph and calculates the connected component analysis
 5.blockchain_spark/src/main/scala/com/blockchain/app/Part2.scala – Used for Part2
-```
 
-##### Compiled Using: sbt assembly
-##### Run Time (approx): 15min (Part1) + 45min (Pre-Processing) + 12min (Part2) 
-##### Note: 
-```
+Run Time (approx): 15min (Part1) + 45min (Pre-Processing) + 12min (Part2) 
+
+Note:
 1.Can also be verified on a small dataset using the test configurations (files locations can be specified in resources/config-Local.properties file)
 2.Also, note that all the logic for part1 and part2 are specified as comments in the main classes above.
 3.Pre-processing was done on a single instance.
