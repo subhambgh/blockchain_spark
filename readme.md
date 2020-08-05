@@ -42,7 +42,9 @@ on AWS Educate Instance using EMR, S3 Modules
 ![Serial Control](/sc.png)
 
 #### Step 3: Calculate the connected component analysis on the formed graph using BFS/DFS
+```
 All the connected component will belong to a single user.
+```
 
 #### System Configuration
 
