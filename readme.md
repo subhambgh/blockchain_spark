@@ -18,9 +18,11 @@ on AWS Educate Instance using EMR, S3 Modules
 ### Part II
 
 **Preprocessing Steps**:
+
   ***Step1***: get all the single o/p transactions from txout.dat
    * simple - all records are sorted
    * two pointer problem
+   
   ***Step2***: merge all this single o/p transactions with all the i/p transactions
    * external merge sort - used com.google.externalsort (again an interesting lib - implementation of external merge sort in ADS)
    * create two Queues for each file - to read chars in bytes (BufferedReader), and store both of them in a Priority Queue, PQ
@@ -29,22 +31,28 @@ on AWS Educate Instance using EMR, S3 Modules
    * pull smallest record from PQ and write to writer queue
    * as soon as you pull a record in a queue from PQ, buffer another set of chars into the corresponding queue
    * Also, go on writing the files into the file from another queue
+   
   ***Step3***: Process file and generate the edge list
    * Example :
-   *   in:
-   *      txID1 + \t + addID1
-   *      txID1 + \t + addID2
-   *   out:
-   *      addID1 + \t + addID2 + \t + txID1
+   ```
+      in:
+         txID1 + \t + addID1
+         txID1 + \t + addID2
+      out:
+         addID1 + \t + addID2 + \t + txID1
+   ```
 
 **PostProcessing Steps**
+
   ***Step1***: Joint Control			 
   1. Firstly, draw a vertex for each address ID in addresses.dat. 
-  2. Add an edge between address if they belong to the same transaction and store the tx information.		 
+  2. Add an edge between address if they belong to the same transaction and store the tx information.
+  
   ***Step2***: Serial Control
   1. Find all the single o/p transactions
   2. Now, for a single o/p transaction with txID say tx1, find the edge with same transaction ID as tx1 in the above graph.
   3. Connect the o/p address with one of the vertices belonging to that edge as shown below
+  
   ***Step 3***: Calculate the connected component analysis on the formed graph using BFS/DFS
   1. All the connected component will belong to a single user.
 
