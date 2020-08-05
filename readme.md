@@ -1,5 +1,6 @@
 # CIS6930 – BlockChain
 #### HW -2: Exploring Bitcoin Transactions
+![Bitcoin Transactions](/bt.png)
 ```
 The projet comprised of two parts and we had to analyze approximately 5 lakh blocks of the orignal dataset comprising a total of over 100 GB of data.
 Part 1: Data Analysis 
