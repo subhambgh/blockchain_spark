@@ -22,43 +22,41 @@ Java v8
 on AWS Educate Instance using EMR, S3 Modules
 ```
 
-#### Idea behind Part II (the most interesting one)
+#### Idea behind Part II
 
-#### Step1: Joint Control			 
+##### Step1: Joint Control			 
 ```
 1.Firstly, draw a vertex for each address ID in addresses.dat. 
 2.Add an edge between address if they belong to the same transaction and store the tx information.		 
 ```
-
-#### Step2: Serial Control
+##### Step2: Serial Control
 ```
 1.Find all the single o/p transactions
 2.Now, for a single o/p transaction with txID say tx1, find the edge with same transaction ID as tx1 in the above graph.
 3.Connect the o/p address with one of the vertices belonging to that edge as shown below
 ```
-##### Joint Control 
-![Joint Control](/jc.png)
-##### Serial Control 
-![Serial Control](/sc.png)
-
-#### Step 3: Calculate the connected component analysis on the formed graph using BFS/DFS
+##### Step 3: Calculate the connected component analysis on the formed graph using BFS/DFS
 ```
 All the connected component will belong to a single user.
 ```
 
+###### Joint Control & Serial Control 
+![Joint Control](/jc.png)         ![Serial Control](/sc.png)
+
+
 #### System Configuration
 
-#### Master Node
+##### Master Node
 EMR Instance Type	| vCPU	| ECU | 	Memory (GiB)** |	Instance Storage (GB)** |	Instance Count
 --- | --- | --- | --- |--- |--- 
 m5.xlarge	| 4	| 16 |	16 GiB |	96 GB |	1
 
-#### Worker Nodes
+##### Worker Nodes
 EMR Instance Type	| vCPU	| ECU | 	Memory (GiB)** |	Instance Storage (GB)** |	Instance Count
 --- | --- | --- | --- |--- |--- 
 m5.xlarge |	4	| 16	| 16 GiB	| 96 GB |	7
 
-#### Task Node (spot instance)
+##### Task Node (spot instance)
 EMR Instance Type	| vCPU	| ECU | 	Memory (GiB)** |	Instance Storage (GB)** |	Instance Count
 --- | --- | --- | --- |--- |--- 
 m5.xlarge	| 4	| 16 |	16 GiB |	96 GB |	1
