@@ -1,6 +1,6 @@
 
 # CIS6930 – BlockChain
-#### HW -2: Exploring Bitcoin Transactions
+## HW -2: Exploring Bitcoin Transactions
 ![Bitcoin Transactions](/bt.png)
 
 **Project Description**: The projet comprised of two parts and we had to analyze approximately 5 lakh blocks of the orignal dataset comprising a total of over 100 GB of data.
@@ -15,7 +15,7 @@ Hadoop v3.0
 Java v8
 on AWS Educate Instance using EMR, S3 Modules
 
-## Part II
+### Part II
 ***Step1***: Joint Control			 
 1. Firstly, draw a vertex for each address ID in addresses.dat. 
 2. Add an edge between address if they belong to the same transaction and store the tx information.		 
@@ -32,7 +32,8 @@ on AWS Educate Instance using EMR, S3 Modules
 ![Joint Control](/jcsc.png)         
 
 
-## System Configuration
+
+### System Configuration
 EMR Instance Type	| vCPU	| ECU | 	Memory (GiB)** |	Instance Storage (GB)** |	Instance Count | Node type
 --- | --- | --- | --- |--- |--- |---
 m5.xlarge	| 4	| 16 |	16 GiB |	96 GB |	1 | Master
@@ -40,9 +41,9 @@ m5.xlarge |	4	| 16	| 16 GiB	| 96 GB |	7 | Worker
 m5.xlarge	| 4	| 16 |	16 GiB |	96 GB |	1 | Task
 
 ** data specified above corresponds to available resources before spark and Hadoop installations
-* HDFS was used with default replication factor i.e., 3
+** HDFS was used with default replication factor i.e., 3
 
-## Main Class
+### Main Class
 1. blockchain_spark/src/main/scala/com/blockchain/app/Part1_1.scala – Used for Part1. Q1 – Q4
 2. blockchain_spark/src/main/scala/com/blockchain/app/Part1_2.scala - Used for Part1. Q5 – Q8
 3. blockchain_spark/src/main/java/com/blockchain/app/PreProcessinginHDFS.java – Used to preprocess txin.dat and txout.dat
@@ -51,9 +52,9 @@ m5.xlarge	| 4	| 16 |	16 GiB |	96 GB |	1 | Task
 
 **Run Time (approx)**: 15min (Part1) + 45min (Pre-Processing) + 12min (Part2) 
 
-Note:
-1. Can also be verified on a small dataset using the test configurations (files locations can be specified in resources/config-Local.properties file)
-2. Also, note that all the logic for part1 and part2 are specified as comments in the main classes above.
-3. Pre-processing was done on a single instance.
+**Note**:
+* Can also be verified on a small dataset using the test configurations (files locations can be specified in resources/config-Local.properties file)
+* Also, note that all the logic for part1 and part2 are specified as comments in the main classes above.
+* Pre-processing was done on a single instance.
 
 
