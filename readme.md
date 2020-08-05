@@ -29,11 +29,10 @@ on AWS Educate Instance using EMR, S3 Modules
 1. All the connected component will belong to a single user.
 
 
-**Joint Control & Serial Control**
 ![Joint Control](/jcsc.png)         
 
 
-**System Configuration**
+## System Configuration
 EMR Instance Type	| vCPU	| ECU | 	Memory (GiB)** |	Instance Storage (GB)** |	Instance Count | Node type
 --- | --- | --- | --- |--- |--- |---
 m5.xlarge	| 4	| 16 |	16 GiB |	96 GB |	1 | Master
