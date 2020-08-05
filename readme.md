@@ -1,5 +1,12 @@
 # CIS6930 – BlockChain
 #### HW -2: Exploring Bitcoin Transactions
+```
+The projet comprised of two parts, and we had to analyze approximately 5 lakh blocks of the orignal dataset comprising a total of over 100 GB of data.
+Part 1: Data Analysis - comprised questions like - 
+Calcualte balance per address (UTXO's) - Each Bitcoin transaction has atleast one I/P and one O/P and the I/P's and O/P's are wrt the transactions (not users). Each I/P is spent and O/P is received for a user. So UTXO's are the amount of unspent transactions, until a later I/P spents it.
+
+This was calculated as  (sum of O/P transactions for a user - sum of I/P transactions for that user)
+```
 
 Dataset: Original dataset from https://senseable2015-6.mit.edu/bitcoin/ 
 
