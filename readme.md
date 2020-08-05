@@ -4,6 +4,7 @@
 ![Bitcoin Transactions](/bt.png)
 
 **Project Description**: The projet comprised of two parts and we had to analyze approximately 5 lakh blocks of the orignal dataset comprising a total of over 100 GB of data.
+
 **Part 1: Data Analysis** 
 Calcualte balance per address (UTXO's) - Each Bitcoin transaction has atleast one I/P and one O/P and the I/P's and O/P's are wrt the transactions (not users). Each I/P is spent and O/P is received for a user. So UTXO's are the amount of unspent transactions, until a later I/P spents it. This was calculated as  (sum of O/P transactions for a user - sum of I/P transactions for that user)
   
@@ -33,11 +34,8 @@ on AWS Educate Instance using EMR, S3 Modules
 1. All the connected component will belong to a single user.
 
 
-**Joint Control**
-![Joint Control](/jc.png)         
-
-**Serial Control**
-![Serial Control](/sc.png)
+**Joint Control & Serial Control**
+![Joint Control](/jcsc.png)         
 
 
 **System Configuration**
