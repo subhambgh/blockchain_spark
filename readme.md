@@ -5,7 +5,7 @@
 ![Bitcoin Transactions](/bt.png)
 
 **Project Description**: The projet comprised of two parts and we had to analyze approximately 5 lakh blocks of the orignal dataset comprising a total of over 100 GB of data.
-- **Part 1: Data Analysis**: Calcualte balance per address (UTXO's) - Each Bitcoin transaction has atleast one I/P and one O/P and the I/P's and O/P's are wrt the transactions (not users). Each I/P is spent and O/P is received for a user. So UTXO's are the amount of unspent transactions, until a later I/P spents it. This was calculated as  (sum of O/P transactions for a user - sum of I/P transactions for that user)
+- **Part 1: Data Analysis**: Calcualte balance per address (UTXO's) - Each Bitcoin transaction has atleast one I/P and one O/P. We were given multiple files, out of which two were the I/P file and the O/P file. I/P file had I/P's to a specific transaction and O/P's are output to user. So, each I/P is spent and O/P is received for a user. So UTXO's are the amount of unspent transactions, until a later I/P spents it. This was calculated as  (sum of O/P transactions for a user - sum of I/P transactions for that user)
 - **Part 2: Heuristics**: 2.1 Joint Control - where we had to assume all the I/P address of a transaction is controlled by a single user. 2.2 Serial Control - where all the O/P transaction with only a single O/P is controlled by the same user owning the I/P address.
 
 **Dataset**: Original dataset from https://senseable2015-6.mit.edu/bitcoin/ 
