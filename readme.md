@@ -6,7 +6,7 @@
 
 **Project Description**: The projet comprised of two parts and we had to analyze approximately 5 lakh blocks of the orignal dataset comprising a total of over 100 GB of data.
 - **Part 1: Data Analysis**: First part was mostly analytics which helped us understand the data better. Tasks such as calculate balance per address (UTXO's) - Our data set had multiple files, out of which two were input and the output file. Here, an input is a reference to an output from a previous transaction and an output share the combined value of the inputs. Each I/P is spent and O/P is received for a user. So UTXO's are the amount of unspent transactions, until a later I/P spents it. This was calculated as  (sum of O/P transactions for a user - sum of I/P transactions for that user)
-- **Part 2: Heuristics**: 2.1 Joint Control - where we had to assume all the I/P address of a transaction is controlled by a single user. 2.2 Serial Control - where all the O/P transaction with only a single O/P is controlled by the same user owning the I/P address.
+- **Part 2: Heuristics**: 2.1 Joint Control - where we had to assume all the I/P address of a transaction is controlled by a single user. 2.2 Serial Control - where all the O/P transaction with only a single O/P is controlled by the same user owning the I/P address. So combining both the heuristcs together was preety challenging.
 
 **Dataset**: Original dataset from https://senseable2015-6.mit.edu/bitcoin/ 
 
@@ -19,9 +19,8 @@ on AWS Educate Instance using EMR, S3 Modules
 ### Part II
 
 **Preprocessing Steps**:
-
-  - ***Step1***: 
-	 * get all the single o/p transactions from txout.dat
+ 
+  - ***Step1***: get all the single o/p transactions from txout.dat
     * simple - all records are sorted
     * two pointer problem
    
