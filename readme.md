@@ -18,7 +18,25 @@ on AWS Educate Instance using EMR, S3 Modules
 
 ### Part II
 
-**Preprocessing Steps**:
+**Overview**
+
+  - ***Step1***: Joint Control			 
+    * Firstly, draw a vertex for each address ID in addresses.dat. 
+    * Add an edge between address if they belong to the same transaction and store the tx information.
+ 
+  - ***Step2***: Serial Control
+    * Find all the single o/p transactions
+    * Now, for a single o/p transaction with txID say tx1, find the edge with same transaction ID as tx1 in the above graph.
+    * Connect the o/p address with one of the vertices belonging to that edge as shown below
+  
+  - ***Step 3***: 
+    * Calculate the connected component analysis on the formed graph using BFS/DFS
+    * All the connected component will belong to a single user.
+
+
+![Joint Control](/jcsc.png) 
+
+**A bit modified approach**:
  
   - ***Step1***: get all the single o/p transactions from txout.dat
     * simple - all records are sorted
@@ -42,25 +60,10 @@ on AWS Educate Instance using EMR, S3 Modules
       out:
          addID1 + \t + addID2 + \t + txID1
    ```
-
-**PostProcessing Steps**
-
-  - ***Step1***: Joint Control			 
-    * Firstly, draw a vertex for each address ID in addresses.dat. 
-    * Add an edge between address if they belong to the same transaction and store the tx information.
- 
-  - ***Step2***: Serial Control
-    * Find all the single o/p transactions
-    * Now, for a single o/p transaction with txID say tx1, find the edge with same transaction ID as tx1 in the above graph.
-    * Connect the o/p address with one of the vertices belonging to that edge as shown below
-  
-  - ***Step 3***: 
+   
+   ***Step 4***: 
     * Calculate the connected component analysis on the formed graph using BFS/DFS
     * All the connected component will belong to a single user.
-
-
-![Joint Control](/jcsc.png)         
-
 
 
 ### System Configuration
