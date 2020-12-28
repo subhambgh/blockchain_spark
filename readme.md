@@ -61,7 +61,7 @@ on AWS Educate Instance using EMR, S3 Modules
          addID1 + \t + addID2 + \t + txID1
    ```
    
-   ***Step 4***: 
+   - ***Step 4***: 
     * Calculate the connected component analysis on the formed graph using BFS/DFS
     * All the connected component will belong to a single user.
 
